@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { addToDb, getStroedCard } from '../../utilities/fakedb';
+import Cart from '../Cart/Cart';
 import Product from '../Product/Product';
 import './Shop.css'
 
@@ -9,12 +11,48 @@ const Shop = () => {
         fetch('products.json')
         .then(res => res.json())
         .then(data => setProducts(data))
-    },[])
+    },[]);
 
-    const bottonAddtoCart = (products) =>{
-        console.log(products);
-        const newCard =[...card,products]
+    // useEffect ( () =>{
+    //     const storedCart = getStroedCard();
+    //     const saveCard = [];
+    //     for(const id of storedCart){
+    //         const addedProcuct =products.find(product => product.id === id );
+    //         if(addedProcuct){
+    //             saveCard.push(addedProcuct)
+    //         }
+    //     }
+    //     setCard(saveCard);
+    // }, [])
+
+    useEffect( () => {
+        const storedCart = getStroedCard();
+        const saveCard = [];
+        for(const id in storedCart){
+            const addProduct = products.find(product => product.id === id)
+            if(addProduct){
+                const quantity =storedCart[id];
+                addProduct.quantity =quantity;
+                saveCard.push(addProduct)
+            }
+        }
+        setCard(saveCard);
+    },[products])
+
+    const bottonAddtoCart = (selectedProducts) =>{
+        let newCart = [];
+        const exists = card.find(product => product.id === selectedProducts.id)
+        if(!exists){
+            selectedProducts.quantity = 1;
+            newCart =[...card, selectedProducts]
+        }else{
+            const rest = card.filter(product => product.id !== selectedProducts.id);
+            exists.quantity =exists.quantity + 1;
+            newCart =[...rest,exists];
+        }
+        const newCard =[...card,selectedProducts]
         setCard(newCard)
+        addToDb(selectedProducts.id)
     }
 
     
@@ -31,8 +69,7 @@ const Shop = () => {
                 }
             </div>
             <div className='order-container'>
-                <h3>Order summary</h3>
-                <p>Select item : {card.length}</p>
+                <Cart card={card}></Cart>
             </div>
         </div>
     );
